@@ -590,3 +590,29 @@ static void func_def(void)
     emit_hex("31 C0 C9 C3");                /* implicit 'return 0' */
     emit_patch32(frame, (uint32_t)(8 * nlocals));
 }
+
+/* var NAME; | var NAME[SIZE]; at file scope */
+static void global_decl(void)
+{
+    char name[MAX_IDENT + 1];
+    int line, is_array = 0;
+    int64_t size = 8;
+
+    lex_next();                             /* 'var' */
+    line = tok_line;
+    expect_ident(name);
+    if (tok == T_LBRACK) {
+        lex_next();
+        if (tok != T_INT)
+            die(tok_line, "array size must be an integer literal");
+        size = tok_int;
+        if (size < 1 || size > MAX_BSS)
+            die(tok_line, "array size must be between 1 and %d", MAX_BSS);
+        is_array = 1;
+        lex_next();
+        expect(T_RBRACK);
+    }
+    expect(T_SEMI);
+    check_name_free(name, line);
+    global_add(name, is_array, bss_alloc(size), line);
+}
