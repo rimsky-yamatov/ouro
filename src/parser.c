@@ -255,6 +255,14 @@ static int level_of(Tok t)
         return 3;
     case T_LT: case T_LE: case T_GT: case T_GE:
         return 4;
+    case T_PIPE:
+        return 5;
+    case T_CARET:
+        return 6;
+    case T_AMP:
+        return 7;
+    case T_SHL: case T_SHR:
+        return 8;
     case T_PLUS: case T_MINUS:
         return 9;
     case T_STAR: case T_SLASH: case T_PERCENT:
@@ -281,6 +289,11 @@ static void apply_binop(Tok op)
     case T_STAR:    emit_hex("48 0F AF C1"); break;
     case T_SLASH:   emit_hex("48 99 48 F7 F9"); break;
     case T_PERCENT: emit_hex("48 99 48 F7 F9 48 89 D0"); break;
+    case T_AMP:     emit_hex("48 21 C8"); break;
+    case T_PIPE:    emit_hex("48 09 C8"); break;
+    case T_CARET:   emit_hex("48 31 C8"); break;
+    case T_SHL:     emit_hex("48 D3 E0"); break;
+    case T_SHR:     emit_hex("48 D3 F8"); break;
     case T_EQ:      compare(0x94); break;
     case T_NE:      compare(0x95); break;
     case T_LT:      compare(0x9C); break;
