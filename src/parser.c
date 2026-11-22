@@ -201,6 +201,18 @@ static void primary(void)
         emit_const(tok_int);
         lex_next();
         break;
+    case T_IDENT: {
+        char name[MAX_IDENT + 1];
+        int line = tok_line;
+
+        strcpy(name, tok_name);
+        lex_next();
+        if (tok == T_LPAREN)
+            call(name, line);
+        else
+            load_var(name, line);
+        break;
+    }
     case T_LPAREN:
         lex_next();
         expr();
