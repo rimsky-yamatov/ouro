@@ -120,6 +120,46 @@ static void scan_decimal(void)
     tok_int = (int64_t)v;
 }
 
+/* Decode the character after a backslash (already consumed). */
+static int read_escape(void)
+{
+    int c = peekc(0);
+
+    pos++;
+    switch (c) {
+    case 'n':  return '\n';
+    case 't':  return '\t';
+    case '0':  return 0;
+    case '\\': return '\\';
+    case '\'': return '\'';
+    case '"':  return '"';
+    default:
+        die(line, "invalid escape sequence");
+    }
+    return 0;
+}
+
+static void scan_char(void)
+{
+    int c, v;
+
+    pos++;                                  /* opening quote */
+    c = peekc(0);
+    if (c == -1 || c == '\n')
+        die(line, "unterminated character literal");
+    if (c == '\'')
+        die(line, "empty character literal");
+    if (c >= 128)
+        die(line, "non-ASCII character in character literal");
+    pos++;
+    v = (c == '\\') ? read_escape() : c;
+    if (peekc(0) != '\'')
+        die(line, "unterminated character literal");
+    pos++;
+    tok = T_INT;
+    tok_int = v;
+}
+
 static void skip_space(void)
 {
     for (;;) {
@@ -159,6 +199,10 @@ void lex_next(void)
             scan_hex();
         else
             scan_decimal();
+        return;
+    }
+    if (c == '\'') {
+        scan_char();
         return;
     }
     die(line, "unexpected character");
