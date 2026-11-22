@@ -1,0 +1,5 @@
+var g;
+fn main() {
+  var g;
+  return 0;
+}
