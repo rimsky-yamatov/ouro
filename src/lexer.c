@@ -184,6 +184,34 @@ static void scan_string(void)
     tok = T_STR;
 }
 
+static void scan_punct(void)
+{
+    int c = peekc(0);
+
+    pos++;
+    switch (c) {
+    case '+': tok = T_PLUS;    break;
+    case '-': tok = T_MINUS;   break;
+    case '*': tok = T_STAR;    break;
+    case '/': tok = T_SLASH;   break;
+    case '%': tok = T_PERCENT; break;
+    case '^': tok = T_CARET;   break;
+    case '~': tok = T_TILDE;   break;
+    case '(': tok = T_LPAREN;  break;
+    case ')': tok = T_RPAREN;  break;
+    case '{': tok = T_LBRACE;  break;
+    case '}': tok = T_RBRACE;  break;
+    case '[': tok = T_LBRACK;  break;
+    case ']': tok = T_RBRACK;  break;
+    case ',': tok = T_COMMA;   break;
+    case ';': tok = T_SEMI;    break;
+    default:
+        if (c >= 32 && c < 127)
+            die(line, "unexpected character '%c'", c);
+        die(line, "unexpected byte 0x%02X", c);
+    }
+}
+
 static void skip_space(void)
 {
     for (;;) {
@@ -233,5 +261,5 @@ void lex_next(void)
         scan_string();
         return;
     }
-    die(line, "unexpected character");
+    scan_punct();
 }
