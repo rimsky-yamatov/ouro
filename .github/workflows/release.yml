@@ -1,0 +1,103 @@
+name: Release
+
+# Push a tag such as v0.1.0 to build ouroc0 for every OS/CPU, generate release
+# notes from the commit history and publish a GitHub release.
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: build (${{ matrix.name }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: true
+      matrix:
+        include:
+          - { name: linux-x86_64,   os: ubuntu-latest,    static: 'ON',  ext: tar.gz }
+          - { name: linux-aarch64,  os: ubuntu-24.04-arm, static: 'ON',  ext: tar.gz }
+          - { name: macos-x86_64,   os: macos-15-intel,   static: 'OFF', ext: tar.gz }
+          - { name: macos-arm64,    os: macos-latest,     static: 'OFF', ext: tar.gz }
+          - { name: windows-x86_64, os: windows-latest,   static: 'OFF', ext: zip }
+          - { name: windows-arm64,  os: windows-11-arm,   static: 'OFF', ext: zip }
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Version
+        shell: bash
+        run: echo "VERSION=${GITHUB_REF_NAME#v}" >> "$GITHUB_ENV"
+
+      - name: Configure
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DOURO_VERSION=${{ env.VERSION }} -DOURO_STATIC=${{ matrix.static }}
+
+      - name: Build
+        run: cmake --build build --config Release
+
+      - name: Locate ouroc0
+        shell: bash
+        run: |
+          if [ -f build/Release/ouroc0.exe ]; then
+            echo "OUROC=build/Release/ouroc0.exe" >> "$GITHUB_ENV"
+          else
+            echo "OUROC=build/ouroc0" >> "$GITHUB_ENV"
+          fi
+
+      - name: Test
+        shell: bash
+        run: |
+          "$OUROC" --version
+          bash tests/run.sh "$OUROC"
+
+      - name: Package
+        shell: bash
+        run: |
+          pkg="ouroc0-${GITHUB_REF_NAME}-${{ matrix.name }}"
+          mkdir -p "dist/$pkg/docs"
+          cp "$OUROC" LICENSE README.md "dist/$pkg/"
+          cp docs/spec.md "dist/$pkg/docs/"
+          cd dist
+          if [ "${{ matrix.ext }}" = zip ]; then
+            cmake -E tar cf "$pkg.zip" --format=zip "$pkg"
+          else
+            cmake -E tar czf "$pkg.tar.gz" "$pkg"
+          fi
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: pkg-${{ matrix.name }}
+          path: dist/ouroc0-*.${{ matrix.ext }}
+
+  release:
+    name: publish release
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: pkg-*
+          merge-multiple: true
+          path: dist
+
+      - name: Checksums
+        run: cd dist && sha256sum ouroc0-* > SHA256SUMS.txt && cat SHA256SUMS.txt
+
+      - name: Release notes
+        run: bash scripts/release-notes.sh "$GITHUB_REF_NAME" > notes.md
+
+      - name: Create release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          flags=""
+          case "$GITHUB_REF_NAME" in *-*) flags="--prerelease" ;; esac
+          gh release create "$GITHUB_REF_NAME" dist/* \
+            --title "Ouro $GITHUB_REF_NAME" \
+            --notes-file notes.md \
+            --verify-tag $flags
