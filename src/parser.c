@@ -616,3 +616,30 @@ static void global_decl(void)
     check_name_free(name, line);
     global_add(name, is_array, bss_alloc(size), line);
 }
+
+void parse_program(void)
+{
+    int main_idx, i;
+
+    lex_next();
+
+    /* Entry stub: exit(main()). */
+    main_idx = func_add("main", 0, 0);
+    emit_call(main_idx);
+    emit_hex("48 89 C7 B8 3C 00 00 00 0F 05");
+
+    while (tok != T_EOF) {
+        if (tok == T_FN)
+            func_def();
+        else if (tok == T_VAR)
+            global_decl();
+        else
+            die(tok_line, "expected 'fn' or 'var' at top level but found %s",
+                tok_text(tok));
+    }
+    if (!funcs[main_idx].defined)
+        die(tok_line, "function 'main' is not defined");
+    for (i = 0; i < nfuncs; i++)
+        if (!funcs[i].defined)
+            die(funcs[i].first_line, "undefined function '%s'", funcs[i].name);
+}
