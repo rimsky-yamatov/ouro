@@ -1,0 +1,5 @@
+fn puts(s) {
+  while (peek(s)) { putc(peek(s)); s = s + 1; }
+  return 0;
+}
+fn main() { puts("ok\n"); return 7; }
