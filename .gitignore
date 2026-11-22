@@ -1,0 +1,9 @@
+/build/
+/dist/
+/ouroc0
+/ouroc0.exe
+*.o
+*.elf
+.vscode/
+.idea/
+.DS_Store
