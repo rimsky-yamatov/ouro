@@ -201,6 +201,11 @@ static void primary(void)
         emit_const(tok_int);
         lex_next();
         break;
+    case T_STR:
+        emit8(0xB8);                        /* mov eax, imm32 (address) */
+        emit_data_addr32(data_add(tok_str, tok_str_len));
+        lex_next();
+        break;
     default:
         die(tok_line, "unexpected %s in expression", tok_text(tok));
     }
