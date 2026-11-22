@@ -15,8 +15,7 @@ fn putnum(n) {
   return 0;
 }
 
-fn line(n) { putnum(n); putc('
-'); return 0; }
+fn line(n) { putnum(n); putc('\n'); return 0; }
 
 
 var hits;
