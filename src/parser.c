@@ -39,3 +39,17 @@ static void expect_ident(char *out)
     strcpy(out, tok_name);
     lex_next();
 }
+
+/* rax = constant */
+static void emit_const(int64_t v)
+{
+    uint64_t u = (uint64_t)v;
+
+    if (u <= 0xFFFFFFFFu) {
+        emit8(0xB8);                        /* mov eax, imm32 */
+        emit32((uint32_t)u);
+    } else {
+        emit_hex("48 B8");                  /* mov rax, imm64 */
+        emit64(u);
+    }
+}
