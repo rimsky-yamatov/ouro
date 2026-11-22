@@ -78,3 +78,26 @@ static void load_var(const char *name, int line)
         die(line, "'%s' is a function, not a variable", name);
     die(line, "undefined variable '%s'", name);
 }
+
+/* variable = rax */
+static void store_var(const char *name, int line)
+{
+    int disp, g;
+
+    if (local_find(name, &disp)) {
+        emit_hex("48 89 85");               /* mov [rbp+disp32], rax */
+        emit32((uint32_t)disp);
+        return;
+    }
+    g = global_find(name);
+    if (g >= 0) {
+        if (globals[g].is_array)
+            die(line, "cannot assign to array '%s'", name);
+        emit_hex("48 89 04 25");            /* mov [abs32], rax */
+        emit_bss_addr32(globals[g].off);
+        return;
+    }
+    if (func_find(name) >= 0 || builtin_find(name) >= 0)
+        die(line, "cannot assign to function '%s'", name);
+    die(line, "undefined variable '%s'", name);
+}
