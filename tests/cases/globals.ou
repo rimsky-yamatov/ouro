@@ -1,0 +1,46 @@
+var nbuf[24];
+
+fn puts(s) {
+  while (peek(s)) { putc(peek(s)); s = s + 1; }
+  return 0;
+}
+
+fn putnum(n) {
+  var i;
+  if (n == 0) { putc('0'); return 0; }
+  if (n < 0) { putc('-'); n = 0 - n; }
+  i = 0;
+  while (n) { poke(nbuf + i, '0' + n % 10); n = n / 10; i = i + 1; }
+  while (i) { i = i - 1; putc(peek(nbuf + i)); }
+  return 0;
+}
+
+fn line(n) { putnum(n); putc('\n'); return 0; }
+
+var counter;
+var buf[16];
+var words[64];
+var a[3];
+var b[3];
+
+fn main() {
+  line(counter);
+  line(peek(buf));
+  counter = counter + 41;
+  counter = counter + 1;
+  line(counter);
+  poke(buf + 3, 'Z');
+  putc(peek(buf + 3));
+  putc('\n');
+  line(peekw(words));
+  pokew(words + 8, 123456789012);
+  line(peekw(words + 8));
+  line(peekw(words));
+  pokew(words, -5);
+  line(peekw(words));
+  line(peekw(words + 8));
+  pokew(b, 111);
+  poke(a + 2, 9);
+  line(peekw(b));
+  return 0;
+}
