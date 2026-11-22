@@ -29,3 +29,31 @@ int global_add(const char *name, int is_array, int off, int line)
     g->off = off;
     return nglobals++;
 }
+
+Func funcs[MAX_FUNCS];
+int nfuncs;
+
+int func_find(const char *name)
+{
+    int i;
+
+    for (i = 0; i < nfuncs; i++)
+        if (strcmp(funcs[i].name, name) == 0)
+            return i;
+    return -1;
+}
+
+int func_add(const char *name, int nparams, int line)
+{
+    Func *f;
+
+    if (nfuncs >= MAX_FUNCS)
+        die(line, "too many functions (max %d)", MAX_FUNCS);
+    f = &funcs[nfuncs];
+    strcpy(f->name, name);
+    f->nparams = nparams;
+    f->defined = 0;
+    f->code_off = 0;
+    f->first_line = line;
+    return nfuncs++;
+}

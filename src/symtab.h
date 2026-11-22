@@ -14,3 +14,18 @@ extern int nglobals;
 
 int global_find(const char *name);          /* index or -1 */
 int global_add(const char *name, int is_array, int off, int line);
+
+/* Functions, defined or only referenced so far by a call. */
+typedef struct {
+    char name[MAX_IDENT + 1];
+    int nparams;
+    int defined;
+    int code_off;       /* valid once defined */
+    int first_line;     /* line of the first reference or definition */
+} Func;
+
+extern Func funcs[MAX_FUNCS];
+extern int nfuncs;
+
+int func_find(const char *name);            /* index or -1 */
+int func_add(const char *name, int nparams, int line);
