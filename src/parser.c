@@ -227,3 +227,22 @@ static void primary(void)
         die(tok_line, "unexpected %s in expression", tok_text(tok));
     }
 }
+
+static void unary(void)
+{
+    if (tok == T_MINUS) {
+        lex_next();
+        unary();
+        emit_hex("48 F7 D8");               /* neg rax */
+    } else if (tok == T_BANG) {
+        lex_next();
+        unary();
+        emit_hex("48 85 C0 0F 94 C0 48 0F B6 C0");  /* rax = (rax == 0) */
+    } else if (tok == T_TILDE) {
+        lex_next();
+        unary();
+        emit_hex("48 F7 D0");               /* not rax */
+    } else {
+        primary();
+    }
+}
