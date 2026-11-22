@@ -152,3 +152,44 @@ static void builtin_gen(int id, int argc, const char *name, int line)
         break;
     }
 }
+
+/* name(args): the current token is '(' */
+static void call(const char *name, int line)
+{
+    int argc = 0, b, f, disp;
+
+    lex_next();
+    if (tok != T_RPAREN) {
+        for (;;) {
+            if (argc >= MAX_PARAMS)
+                die(tok_line, "too many arguments (max %d)", MAX_PARAMS);
+            expr();
+            emit8(0x50);                    /* push rax */
+            argc++;
+            if (tok != T_COMMA)
+                break;
+            lex_next();
+        }
+    }
+    expect(T_RPAREN);
+
+    b = builtin_find(name);
+    if (b >= 0) {
+        builtin_gen(b, argc, name, line);
+        return;
+    }
+    f = func_find(name);
+    if (f < 0) {
+        if (local_find(name, &disp) || global_find(name) >= 0)
+            die(line, "'%s' is not a function", name);
+        f = func_add(name, argc, line);
+    } else if (funcs[f].nparams != argc) {
+        die(line, "function '%s' expects %d argument(s), got %d",
+            name, funcs[f].nparams, argc);
+    }
+    emit_call(f);
+    if (argc > 0) {
+        emit_hex("48 83 C4");               /* add rsp, 8*argc */
+        emit8(8 * argc);
+    }
+}
