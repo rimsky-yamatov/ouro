@@ -201,6 +201,11 @@ static void primary(void)
         emit_const(tok_int);
         lex_next();
         break;
+    case T_LPAREN:
+        lex_next();
+        expr();
+        expect(T_RPAREN);
+        break;
     case T_STR:
         emit8(0xB8);                        /* mov eax, imm32 (address) */
         emit_data_addr32(data_add(tok_str, tok_str_len));
