@@ -437,6 +437,33 @@ static void return_stmt(void)
     emit_hex("C9 C3");
 }
 
+/* if (cond) { ... } [else { ... } | else if ...] */
+static void if_stmt(void)
+{
+    int jz;
+
+    lex_next();                             /* 'if' */
+    expect(T_LPAREN);
+    expr();
+    expect(T_RPAREN);
+    jz = emit_test_jz();
+    block();
+    if (tok == T_ELSE) {
+        int je;
+
+        lex_next();
+        je = emit_jmp();
+        patch_here(jz);
+        if (tok == T_IF)
+            if_stmt();
+        else
+            block();
+        patch_here(je);
+    } else {
+        patch_here(jz);
+    }
+}
+
 static void stmt(void)
 {
     switch (tok) {
@@ -445,6 +472,9 @@ static void stmt(void)
         break;
     case T_RETURN:
         return_stmt();
+        break;
+    case T_IF:
+        if_stmt();
         break;
     case T_IDENT:
         if (lex_peek_assign()) {
