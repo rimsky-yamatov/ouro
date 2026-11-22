@@ -31,3 +31,35 @@ static void put64(uint8_t *p, uint64_t v)
     put32(p, (uint32_t)v);
     put32(p + 4, (uint32_t)(v >> 32));
 }
+
+/* One PT_LOAD segment (RWX) covering the whole file; memsz > filesz leaves
+   room for zero-initialized globals. */
+static void build_header(uint8_t *h, int64_t filesz, int64_t memsz)
+{
+    memset(h, 0, HDR_SIZE);
+
+    /* ELF header */
+    h[0] = 0x7F; h[1] = 'E'; h[2] = 'L'; h[3] = 'F';
+    h[4] = 2;                               /* 64-bit */
+    h[5] = 1;                               /* little endian */
+    h[6] = 1;                               /* ELF version */
+    put16(h + 16, 2);                       /* ET_EXEC */
+    put16(h + 18, 0x3E);                    /* x86-64 */
+    put32(h + 20, 1);
+    put64(h + 24, LOAD_BASE + HDR_SIZE);    /* entry: start of the code */
+    put64(h + 32, ELF_EHDR);                /* program header offset */
+    put16(h + 52, ELF_EHDR);
+    put16(h + 54, ELF_PHDR);
+    put16(h + 56, 1);                       /* one program header */
+    put16(h + 58, 64);                      /* section header entry size */
+
+    /* Program header */
+    put32(h + 64, 1);                       /* PT_LOAD */
+    put32(h + 68, 7);                       /* R | W | X */
+    put64(h + 72, 0);                       /* offset */
+    put64(h + 80, LOAD_BASE);               /* vaddr */
+    put64(h + 88, LOAD_BASE);               /* paddr */
+    put64(h + 96, (uint64_t)filesz);
+    put64(h + 104, (uint64_t)memsz);
+    put64(h + 112, 0x1000);                 /* align */
+}
