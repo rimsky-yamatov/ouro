@@ -29,3 +29,11 @@ extern int nfuncs;
 
 int func_find(const char *name);            /* index or -1 */
 int func_add(const char *name, int nparams, int line);
+
+/* Parameters and locals of the function being compiled. */
+extern int nlocals;                         /* `var` locals, not parameters */
+
+void locals_reset(void);
+int local_find(const char *name, int *disp);    /* 1 if found; disp = rbp offset */
+void param_add(const char *name, int index, int nparams);
+void local_add(const char *name, int line);
