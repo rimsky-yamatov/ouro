@@ -51,3 +51,41 @@ jobs:
       - name: Test
         shell: bash
         run: bash tests/run.sh "$OUROC"
+
+      # ouroc0 is a cross compiler: every host must emit byte-identical output.
+      - name: Compile samples and hash them
+        shell: bash
+        run: |
+          mkdir -p out
+          for f in tests/cases/*.ou; do
+            "$OUROC" < "$f" > "out/$(basename "$f" .ou).elf"
+          done
+          (cd out && cmake -E sha256sum *.elf) > hashes.txt
+          cat hashes.txt
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: hashes-${{ matrix.name }}
+          path: hashes.txt
+
+  determinism:
+    name: identical output on every host
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: hashes-*
+          path: hashes
+
+      - name: Compare
+        run: |
+          ref=hashes/hashes-linux-x86_64/hashes.txt
+          status=0
+          for f in hashes/*/hashes.txt; do
+            if ! diff -u "$ref" "$f"; then
+              echo "::error::output of $f differs from linux-x86_64"
+              status=1
+            fi
+          done
+          exit $status
