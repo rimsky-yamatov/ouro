@@ -53,3 +53,28 @@ static void emit_const(int64_t v)
         emit64(u);
     }
 }
+
+/* rax = value of a variable, or the address of a global array */
+static void load_var(const char *name, int line)
+{
+    int disp, g;
+
+    if (local_find(name, &disp)) {
+        emit_hex("48 8B 85");               /* mov rax, [rbp+disp32] */
+        emit32((uint32_t)disp);
+        return;
+    }
+    g = global_find(name);
+    if (g >= 0) {
+        if (globals[g].is_array) {
+            emit8(0xB8);                    /* mov eax, imm32 (address) */
+        } else {
+            emit_hex("48 8B 04 25");        /* mov rax, [abs32] */
+        }
+        emit_bss_addr32(globals[g].off);
+        return;
+    }
+    if (func_find(name) >= 0 || builtin_find(name) >= 0)
+        die(line, "'%s' is a function, not a variable", name);
+    die(line, "undefined variable '%s'", name);
+}
