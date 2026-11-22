@@ -101,3 +101,54 @@ static void store_var(const char *name, int line)
         die(line, "cannot assign to function '%s'", name);
     die(line, "undefined variable '%s'", name);
 }
+
+/* putc/eputc: the argument is on top of the stack; write its low byte. */
+static void write_byte(int fd)
+{
+    emit8(0xBF);                            /* mov edi, fd */
+    emit32((uint32_t)fd);
+    emit_hex("48 89 E6");                   /* mov rsi, rsp */
+    emit_hex("BA 01 00 00 00");             /* mov edx, 1 */
+    emit_hex("B8 01 00 00 00");             /* mov eax, 1 (write) */
+    emit_hex("0F 05");                      /* syscall */
+    emit_hex("58");                         /* pop rax (drop the argument) */
+    emit_hex("31 C0");                      /* xor eax, eax */
+}
+
+/* Built-ins are expanded inline. All arguments are already pushed. */
+static void builtin_gen(int id, int argc, const char *name, int line)
+{
+    if (argc != builtins[id].nargs)
+        die(line, "'%s' expects %d argument(s), got %d",
+            name, builtins[id].nargs, argc);
+    switch (id) {
+    case B_PEEK:
+        emit_hex("58 48 0F B6 00");         /* pop rax ; movzx rax, byte [rax] */
+        break;
+    case B_POKE:
+        emit_hex("58 59 88 01 31 C0");      /* pop rax,rcx ; mov [rcx], al */
+        break;
+    case B_PEEKW:
+        emit_hex("58 48 8B 00");            /* pop rax ; mov rax, [rax] */
+        break;
+    case B_POKEW:
+        emit_hex("58 59 48 89 01 31 C0");   /* pop rax,rcx ; mov [rcx], rax */
+        break;
+    case B_GETC:
+        /* read(0, rsp, 1) into a zeroed stack slot; -1 unless one byte came */
+        emit_hex("6A 00 31 FF 48 89 E6 BA 01 00 00 00 31 C0 0F 05");
+        emit_hex("48 83 F8 01 58 74 07 48 C7 C0 FF FF FF FF");
+        break;
+    case B_PUTC:
+        write_byte(1);
+        break;
+    case B_EPUTC:
+        write_byte(2);
+        break;
+    case B_EXIT:
+        emit_hex("58 48 89 C7 B8 3C 00 00 00 0F 05");
+        break;
+    default:
+        break;
+    }
+}
