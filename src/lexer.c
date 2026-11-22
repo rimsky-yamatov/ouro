@@ -302,3 +302,23 @@ int lex_peek_assign(void)
     line = save_line;
     return r;
 }
+
+static const char *const tok_names[] = {
+    "end of file", "integer", "string", "identifier",
+    "'fn'", "'var'", "'if'", "'else'", "'while'", "'return'", "'break'",
+    "'+'", "'-'", "'*'", "'/'", "'%'",
+    "'&'", "'|'", "'^'", "'~'", "'!'",
+    "'<<'", "'>>'",
+    "'=='", "'!='", "'<'", "'<='", "'>'", "'>='",
+    "'&&'", "'||'", "'='",
+    "'('", "')'", "'{'", "'}'", "'['", "']'",
+    "','", "';'",
+};
+
+typedef char tok_names_matches_enum
+    [sizeof tok_names / sizeof tok_names[0] == T_COUNT ? 1 : -1];
+
+const char *tok_text(Tok t)
+{
+    return tok_names[t];
+}
