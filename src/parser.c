@@ -464,6 +464,35 @@ static void if_stmt(void)
     }
 }
 
+/* while (cond) { ... } */
+static void while_stmt(void)
+{
+    int top, jz, base;
+
+    lex_next();                             /* 'while' */
+    expect(T_LPAREN);
+    top = emit_pos();
+    expr();
+    expect(T_RPAREN);
+    jz = emit_test_jz();
+    vec_push(&loop_base, brk.n);
+    block();
+    emit_jmp_to(top);
+    patch_here(jz);
+    base = vec_pop(&loop_base);
+    while (brk.n > base)
+        patch_here(vec_pop(&brk));
+}
+
+static void break_stmt(void)
+{
+    if (loop_base.n == 0)
+        die(tok_line, "'break' outside of loop");
+    lex_next();                             /* 'break' */
+    expect(T_SEMI);
+    vec_push(&brk, emit_jmp());
+}
+
 static void stmt(void)
 {
     switch (tok) {
@@ -475,6 +504,12 @@ static void stmt(void)
         break;
     case T_IF:
         if_stmt();
+        break;
+    case T_WHILE:
+        while_stmt();
+        break;
+    case T_BREAK:
+        break_stmt();
         break;
     case T_IDENT:
         if (lex_peek_assign()) {
