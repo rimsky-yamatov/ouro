@@ -1,0 +1,31 @@
+var nbuf[24];
+
+fn puts(s) {
+  while (peek(s)) { putc(peek(s)); s = s + 1; }
+  return 0;
+}
+
+fn putnum(n) {
+  var i;
+  if (n == 0) { putc('0'); return 0; }
+  if (n < 0) { putc('-'); n = 0 - n; }
+  i = 0;
+  while (n) { poke(nbuf + i, '0' + n % 10); n = n / 10; i = i + 1; }
+  while (i) { i = i - 1; putc(peek(nbuf + i)); }
+  return 0;
+}
+
+fn line(n) { putnum(n); putc('\n'); return 0; }
+
+fn main() {
+  line(0xFF);
+  line(0x7FFFFFFFFFFFFFFF);
+  line(0xFFFFFFFFFFFFFFFF == -1);
+  line(4294967295);
+  line(4294967296);
+  line(9223372036854775807 == 0x7FFFFFFFFFFFFFFF);
+  line(0x10);
+  line(0XaB);
+  line(0);
+  return 0;
+}
