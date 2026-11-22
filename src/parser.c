@@ -246,3 +246,47 @@ static void unary(void)
         primary();
     }
 }
+
+/* Binding strength of a binary operator; 0 if not one. Higher binds tighter. */
+static int level_of(Tok t)
+{
+    switch (t) {
+    case T_PLUS: case T_MINUS:
+        return 9;
+    case T_STAR: case T_SLASH: case T_PERCENT:
+        return 10;
+    default:
+        return 0;
+    }
+}
+
+/* rax = rax OP rcx */
+static void apply_binop(Tok op)
+{
+    switch (op) {
+    case T_PLUS:    emit_hex("48 01 C8"); break;
+    case T_MINUS:   emit_hex("48 29 C8"); break;
+    case T_STAR:    emit_hex("48 0F AF C1"); break;
+    case T_SLASH:   emit_hex("48 99 48 F7 F9"); break;
+    case T_PERCENT: emit_hex("48 99 48 F7 F9 48 89 D0"); break;
+    default: break;
+    }
+}
+
+/* Left-associative precedence climbing over levels >= minlvl. The left value
+   is pushed while the right one is computed, then both are combined. */
+static void binary(int minlvl)
+{
+    int lvl;
+
+    unary();
+    while ((lvl = level_of(tok)) >= minlvl) {
+        Tok op = tok;
+
+        lex_next();
+        emit8(0x50);                        /* push rax */
+        binary(lvl + 1);
+        emit_hex("48 89 C1 58");            /* mov rcx, rax ; pop rax */
+        apply_binop(op);
+    }
+}
