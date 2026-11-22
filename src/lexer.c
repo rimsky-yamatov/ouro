@@ -31,3 +31,36 @@ static int peekc(size_t k)
 {
     return pos + k < src_len ? (unsigned char)src[pos + k] : -1;
 }
+
+static void skip_space(void)
+{
+    for (;;) {
+        int c = peekc(0);
+
+        if (c == ' ' || c == '\t' || c == '\r') {
+            pos++;
+        } else if (c == '\n') {
+            line++;
+            pos++;
+        } else if (c == '#') {
+            while (peekc(0) != -1 && peekc(0) != '\n')
+                pos++;
+        } else {
+            break;
+        }
+    }
+}
+
+void lex_next(void)
+{
+    int c;
+
+    skip_space();
+    tok_line = line;
+    c = peekc(0);
+    if (c == -1) {
+        tok = T_EOF;
+        return;
+    }
+    die(line, "unexpected character");
+}
