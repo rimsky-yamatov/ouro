@@ -72,6 +72,24 @@ static void scan_ident(void)
     }
 }
 
+static void scan_decimal(void)
+{
+    uint64_t v = 0;
+
+    while (is_digit(peekc(0))) {
+        int d = peekc(0) - '0';
+
+        if (v > (uint64_t)(INT64_MAX - d) / 10)
+            die(line, "integer literal too large");
+        v = v * 10 + (uint64_t)d;
+        pos++;
+    }
+    if (is_alpha(peekc(0)))
+        die(line, "invalid number");
+    tok = T_INT;
+    tok_int = (int64_t)v;
+}
+
 static void skip_space(void)
 {
     for (;;) {
@@ -104,6 +122,10 @@ void lex_next(void)
     }
     if (is_alpha(c)) {
         scan_ident();
+        return;
+    }
+    if (is_digit(c)) {
+        scan_decimal();
         return;
     }
     die(line, "unexpected character");
