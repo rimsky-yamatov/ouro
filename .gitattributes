@@ -1,0 +1,5 @@
+* text=auto eol=lf
+*.ou text eol=lf
+tests/cases/crlf_comments.ou -text
+tests/cases/*.in -text
+tests/cases/*.out -text
