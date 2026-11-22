@@ -531,3 +531,62 @@ static void block(void)
         stmt();
     expect(T_RBRACE);
 }
+
+/* fn NAME(params) { ... } */
+static void func_def(void)
+{
+    char name[MAX_IDENT + 1];
+    char pnames[MAX_PARAMS][MAX_IDENT + 1];
+    int plines[MAX_PARAMS];
+    int line, nparams = 0, f, frame, i;
+
+    lex_next();                             /* 'fn' */
+    line = tok_line;
+    expect_ident(name);
+    expect(T_LPAREN);
+    if (tok != T_RPAREN) {
+        for (;;) {
+            if (nparams >= MAX_PARAMS)
+                die(tok_line, "too many parameters (max %d)", MAX_PARAMS);
+            plines[nparams] = tok_line;
+            expect_ident(pnames[nparams]);
+            nparams++;
+            if (tok != T_COMMA)
+                break;
+            lex_next();
+        }
+    }
+    expect(T_RPAREN);
+
+    if (strcmp(name, "main") == 0 && nparams != 0)
+        die(line, "'main' must take no parameters");
+    if (builtin_find(name) >= 0)
+        die(line, "'%s' is a builtin and cannot be redefined", name);
+    if (global_find(name) >= 0)
+        die(line, "'%s' is already declared as a global", name);
+    f = func_find(name);
+    if (f >= 0) {
+        if (funcs[f].defined)
+            die(line, "redefinition of function '%s'", name);
+        if (funcs[f].nparams != nparams)
+            die(line, "function '%s' defined with %d parameter(s) but called with %d",
+                name, nparams, funcs[f].nparams);
+    } else {
+        f = func_add(name, nparams, line);
+    }
+    funcs[f].defined = 1;
+    funcs[f].code_off = emit_pos();
+
+    locals_reset();
+    for (i = 0; i < nparams; i++) {
+        check_local_name(pnames[i], plines[i]);
+        param_add(pnames[i], i, nparams);
+    }
+
+    emit_hex("55 48 89 E5 48 81 EC");       /* push rbp ; mov rbp, rsp ; sub rsp, imm32 */
+    frame = emit_pos();
+    emit32(0);
+    block();
+    emit_hex("31 C0 C9 C3");                /* implicit 'return 0' */
+    emit_patch32(frame, (uint32_t)(8 * nlocals));
+}
