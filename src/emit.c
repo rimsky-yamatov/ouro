@@ -36,3 +36,32 @@ void emit64(uint64_t v)
     for (i = 0; i < 8; i++)
         emit8((int)((v >> (8 * i)) & 0xFF));
 }
+
+static int hex_digit(int c)
+{
+    if (c >= '0' && c <= '9')
+        return c - '0';
+    if (c >= 'A' && c <= 'F')
+        return c - 'A' + 10;
+    if (c >= 'a' && c <= 'f')
+        return c - 'a' + 10;
+    return -1;
+}
+
+void emit_hex(const char *s)
+{
+    while (*s) {
+        int hi, lo;
+
+        if (*s == ' ') {
+            s++;
+            continue;
+        }
+        hi = hex_digit(s[0]);
+        lo = hex_digit(s[1]);
+        if (hi < 0 || lo < 0)
+            die(tok_line, "internal error: bad machine code string");
+        emit8(hi * 16 + lo);
+        s += 2;
+    }
+}
