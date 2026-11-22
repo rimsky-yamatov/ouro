@@ -4,7 +4,9 @@
 #include <string.h>
 
 #include "lexer.h"
+#include "link.h"
 #include "ouro_limits.h"
+#include "parser.h"
 #include "util.h"
 
 #ifndef OURO_VERSION
@@ -71,6 +73,13 @@ int main(int argc, char **argv)
     if (dump) {
         dump_tokens();
         return 0;
+    }
+
+    parse_program();
+    link_write(stdout);
+    if (fflush(stdout) != 0 || ferror(stdout)) {
+        fputs("ouroc0: write error\n", stderr);
+        return 1;
     }
     return 0;
 }
