@@ -345,3 +345,32 @@ static void logical_and(void)
         patch_here(je);
     }
 }
+
+static void logical_or(void)
+{
+    logical_and();
+    if (tok == T_OROR) {
+        int js[CHAIN_MAX], n = 0, je, i;
+
+        while (tok == T_OROR) {
+            lex_next();
+            if (n >= CHAIN_MAX - 1)
+                die(tok_line, "too many operands in '||' chain");
+            js[n++] = emit_test_jnz();      /* true: skip the rest */
+            logical_and();
+        }
+        js[n++] = emit_test_jnz();
+        emit_hex("31 C0");                  /* xor eax, eax */
+        je = emit_jmp();
+        for (i = 0; i < n; i++)
+            patch_here(js[i]);
+        emit8(0xB8);                        /* mov eax, 1 */
+        emit32(1);
+        patch_here(je);
+    }
+}
+
+static void expr(void)
+{
+    logical_or();
+}
