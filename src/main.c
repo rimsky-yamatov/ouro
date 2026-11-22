@@ -3,6 +3,15 @@
 #include <stdio.h>
 #include <string.h>
 
+#ifdef _WIN32
+#include <fcntl.h>
+#include <io.h>
+#define IS_TTY(fd) _isatty(fd)
+#else
+#include <unistd.h>
+#define IS_TTY(fd) isatty(fd)
+#endif
+
 #include "lexer.h"
 #include "link.h"
 #include "ouro_limits.h"
@@ -63,6 +72,16 @@ int main(int argc, char **argv)
             usage(stderr);
             return 2;
         }
+    }
+
+#ifdef _WIN32
+    _setmode(_fileno(stdin), _O_BINARY);
+    _setmode(_fileno(stdout), _O_BINARY);
+#endif
+    if (!dump && IS_TTY(1)) {
+        fputs("ouroc0: refusing to write a binary to a terminal; "
+              "redirect standard output\n", stderr);
+        return 2;
     }
 
     n = fread(srcbuf, 1, MAX_SOURCE + 1, stdin);
