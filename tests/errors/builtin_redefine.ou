@@ -1,0 +1,2 @@
+fn peek(a) { return 0; }
+fn main() { return 0; }
