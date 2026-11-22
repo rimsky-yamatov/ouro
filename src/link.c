@@ -63,3 +63,27 @@ static void build_header(uint8_t *h, int64_t filesz, int64_t memsz)
     put64(h + 104, (uint64_t)memsz);
     put64(h + 112, 0x1000);                 /* align */
 }
+
+void link_write(FILE *out)
+{
+    uint8_t hdr[HDR_SIZE];
+    int offs[MAX_FUNCS];
+    int64_t code = emit_pos();
+    int64_t data = data_size();
+    int64_t bss = bss_size();
+    int64_t filesz = HDR_SIZE + code + data;
+    int64_t bss_off = (filesz + 7) & ~(int64_t)7;
+    int64_t memsz = bss ? bss_off + bss : filesz;
+    int i;
+
+    if (filesz > MAX_OUTPUT)
+        die(tok_line, "output too large (max %d bytes)", MAX_OUTPUT);
+    for (i = 0; i < nfuncs; i++)
+        offs[i] = funcs[i].code_off;
+    emit_relocate(LOAD_BASE + HDR_SIZE + code, LOAD_BASE + bss_off, offs);
+    build_header(hdr, filesz, memsz);
+
+    fwrite(hdr, 1, HDR_SIZE, out);
+    fwrite(code_bytes(), 1, (size_t)code, out);
+    fwrite(data_bytes(), 1, (size_t)data, out);
+}
