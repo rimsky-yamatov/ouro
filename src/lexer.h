@@ -17,3 +17,14 @@ typedef enum {
     T_COMMA, T_SEMI,
     T_COUNT
 } Tok;
+
+/* The current token and its attributes. */
+extern Tok tok;
+extern int tok_line;
+extern int64_t tok_int;                 /* T_INT (character literals too) */
+extern char tok_name[MAX_IDENT + 1];    /* T_IDENT */
+extern char tok_str[MAX_STRDATA];       /* T_STR, decoded, NUL terminated */
+extern int tok_str_len;                 /* T_STR, length without the NUL */
+
+void lex_init(const char *src, size_t len);
+void lex_next(void);
