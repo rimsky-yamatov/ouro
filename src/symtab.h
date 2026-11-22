@@ -37,3 +37,17 @@ void locals_reset(void);
 int local_find(const char *name, int *disp);    /* 1 if found; disp = rbp offset */
 void param_add(const char *name, int index, int nparams);
 void local_add(const char *name, int line);
+
+/* Built-in functions, expanded inline by the code generator. */
+typedef enum {
+    B_PEEK, B_POKE, B_PEEKW, B_POKEW, B_GETC, B_PUTC, B_EPUTC, B_EXIT,
+    B_COUNT
+} BuiltinId;
+
+typedef struct {
+    const char *name;
+    int nargs;
+} Builtin;
+
+extern const Builtin builtins[B_COUNT];
+int builtin_find(const char *name);         /* BuiltinId or -1 */

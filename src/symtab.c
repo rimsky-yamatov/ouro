@@ -100,3 +100,18 @@ void local_add(const char *name, int line)
     nentries++;
     nlocals++;
 }
+
+const Builtin builtins[B_COUNT] = {
+    { "peek", 1 },  { "poke", 2 },  { "peekw", 1 }, { "pokew", 2 },
+    { "getc", 0 },  { "putc", 1 },  { "eputc", 1 }, { "exit", 1 },
+};
+
+int builtin_find(const char *name)
+{
+    int i;
+
+    for (i = 0; i < B_COUNT; i++)
+        if (strcmp(builtins[i].name, name) == 0)
+            return i;
+    return -1;
+}
