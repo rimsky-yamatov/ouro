@@ -46,7 +46,8 @@ jobs:
 
       - name: Version
         shell: bash
-        run: "$OUROC" --version
+        run: |
+          "$OUROC" --version
 
       - name: Test
         shell: bash
