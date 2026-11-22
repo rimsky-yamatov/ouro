@@ -193,3 +193,15 @@ static void call(const char *name, int line)
         emit8(8 * argc);
     }
 }
+
+static void primary(void)
+{
+    switch (tok) {
+    case T_INT:
+        emit_const(tok_int);
+        lex_next();
+        break;
+    default:
+        die(tok_line, "unexpected %s in expression", tok_text(tok));
+    }
+}
