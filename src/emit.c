@@ -188,3 +188,50 @@ void emit_call(int func)
     vec_push(&call_func, func);
     emit32(0);
 }
+
+const uint8_t *code_bytes(void)
+{
+    return code;
+}
+
+const uint8_t *data_bytes(void)
+{
+    return data;
+}
+
+int data_size(void)
+{
+    return data_len;
+}
+
+int64_t bss_size(void)
+{
+    return bss_len;
+}
+
+static uint32_t get32(int pos)
+{
+    return (uint32_t)code[pos] | ((uint32_t)code[pos + 1] << 8) |
+           ((uint32_t)code[pos + 2] << 16) | ((uint32_t)code[pos + 3] << 24);
+}
+
+void emit_relocate(int64_t data_base, int64_t bss_base, const int *func_off)
+{
+    int i;
+
+    for (i = 0; i < data_fix.n; i++) {
+        int p = data_fix.v[i];
+
+        emit_patch32(p, get32(p) + (uint32_t)data_base);
+    }
+    for (i = 0; i < bss_fix.n; i++) {
+        int p = bss_fix.v[i];
+
+        emit_patch32(p, get32(p) + (uint32_t)bss_base);
+    }
+    for (i = 0; i < call_pos.n; i++) {
+        int p = call_pos.v[i];
+
+        emit_patch32(p, (uint32_t)(func_off[call_func.v[i]] - (p + 4)));
+    }
+}

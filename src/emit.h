@@ -31,3 +31,13 @@ int bss_alloc(int64_t n);                   /* returns the offset */
 void emit_data_addr32(int off);
 void emit_bss_addr32(int off);
 void emit_call(int func);                   /* call rel32 to function index */
+
+/* Accessors for the linker. */
+const uint8_t *code_bytes(void);
+const uint8_t *data_bytes(void);
+int data_size(void);
+int64_t bss_size(void);
+
+/* Resolve all recorded relocations. func_off[i] is the code offset of
+   function i. */
+void emit_relocate(int64_t data_base, int64_t bss_base, const int *func_off);
