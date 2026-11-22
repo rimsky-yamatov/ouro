@@ -1,0 +1,8 @@
+# leading comment
+fn main() {   # trailing comment
+	# only a comment
+  putc('o');	putc('k');
+  putc(10);
+  return 0;
+}
+# final comment without newline
