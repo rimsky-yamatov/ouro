@@ -289,3 +289,16 @@ void lex_next(void)
     }
     scan_punct();
 }
+
+int lex_peek_assign(void)
+{
+    size_t save_pos = pos;
+    int save_line = line;
+    int r;
+
+    skip_space();
+    r = peekc(0) == '=' && peekc(1) != '=';
+    pos = save_pos;
+    line = save_line;
+    return r;
+}

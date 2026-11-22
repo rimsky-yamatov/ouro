@@ -28,3 +28,9 @@ extern int tok_str_len;                 /* T_STR, length without the NUL */
 
 void lex_init(const char *src, size_t len);
 void lex_next(void);
+
+/* After an identifier token: is the next token a plain '=' (not '==')? */
+int lex_peek_assign(void);
+
+/* Display text of a token kind for diagnostics. */
+const char *tok_text(Tok t);
