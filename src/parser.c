@@ -436,3 +436,33 @@ static void return_stmt(void)
     expect(T_SEMI);
     emit_hex("C9 C3");
 }
+
+static void stmt(void)
+{
+    switch (tok) {
+    case T_VAR:
+        local_decl();
+        break;
+    case T_RETURN:
+        return_stmt();
+        break;
+    case T_IDENT:
+        if (lex_peek_assign()) {
+            assign_stmt();
+            break;
+        }
+        /* fall through */
+    default:
+        expr();
+        expect(T_SEMI);
+        break;
+    }
+}
+
+static void block(void)
+{
+    expect(T_LBRACE);
+    while (tok != T_RBRACE && tok != T_EOF)
+        stmt();
+    expect(T_RBRACE);
+}
