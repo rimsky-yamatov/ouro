@@ -65,3 +65,70 @@ void emit_hex(const char *s)
         s += 2;
     }
 }
+
+void emit_patch32(int pos, uint32_t v)
+{
+    int i;
+
+    for (i = 0; i < 4; i++)
+        code[pos + i] = (uint8_t)((v >> (8 * i)) & 0xFF);
+}
+
+void patch_to(int pos, int target)
+{
+    emit_patch32(pos, (uint32_t)(target - (pos + 4)));
+}
+
+void patch_here(int pos)
+{
+    patch_to(pos, code_len);
+}
+
+int emit_jmp(void)
+{
+    int p;
+
+    emit8(0xE9);
+    p = emit_pos();
+    emit32(0);
+    return p;
+}
+
+int emit_jz(void)
+{
+    int p;
+
+    emit_hex("0F 84");
+    p = emit_pos();
+    emit32(0);
+    return p;
+}
+
+int emit_jnz(void)
+{
+    int p;
+
+    emit_hex("0F 85");
+    p = emit_pos();
+    emit32(0);
+    return p;
+}
+
+int emit_test_jz(void)
+{
+    emit_hex("48 85 C0");
+    return emit_jz();
+}
+
+int emit_test_jnz(void)
+{
+    emit_hex("48 85 C0");
+    return emit_jnz();
+}
+
+void emit_jmp_to(int target)
+{
+    int p = emit_jmp();
+
+    patch_to(p, target);
+}

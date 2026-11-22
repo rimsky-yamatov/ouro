@@ -10,3 +10,15 @@ void emit64(uint64_t v);
 
 /* Emit raw bytes written as hex pairs, e.g. emit_hex("48 89 C1"). */
 void emit_hex(const char *s);
+
+/* Jumps use rel32. The emit_j* functions return the position of the rel32
+   field so it can be patched once the target is known. */
+int emit_jmp(void);
+int emit_jz(void);
+int emit_jnz(void);
+int emit_test_jz(void);     /* test rax, rax ; jz  */
+int emit_test_jnz(void);    /* test rax, rax ; jnz */
+void emit_jmp_to(int target);
+void emit_patch32(int pos, uint32_t v);
+void patch_to(int pos, int target);
+void patch_here(int pos);
