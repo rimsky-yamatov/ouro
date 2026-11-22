@@ -1,0 +1,4 @@
+fn two(a, b) { return a; }
+fn main() {
+  return two(1);
+}
