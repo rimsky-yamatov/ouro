@@ -72,6 +72,36 @@ static void scan_ident(void)
     }
 }
 
+static int hex_value(int c)
+{
+    if (c >= '0' && c <= '9')
+        return c - '0';
+    if (c >= 'a' && c <= 'f')
+        return c - 'a' + 10;
+    if (c >= 'A' && c <= 'F')
+        return c - 'A' + 10;
+    return -1;
+}
+
+static void scan_hex(void)
+{
+    uint64_t v = 0;
+    int digits = 0;
+
+    pos += 2;                               /* 0x */
+    while (hex_value(peekc(0)) >= 0) {
+        if (v >> 60)
+            die(line, "integer literal too large");
+        v = (v << 4) | (uint64_t)hex_value(peekc(0));
+        digits++;
+        pos++;
+    }
+    if (digits == 0 || is_alpha(peekc(0)))
+        die(line, "invalid hexadecimal literal");
+    tok = T_INT;
+    tok_int = (int64_t)v;
+}
+
 static void scan_decimal(void)
 {
     uint64_t v = 0;
@@ -125,7 +155,10 @@ void lex_next(void)
         return;
     }
     if (is_digit(c)) {
-        scan_decimal();
+        if (c == '0' && (peekc(1) == 'x' || peekc(1) == 'X'))
+            scan_hex();
+        else
+            scan_decimal();
         return;
     }
     die(line, "unexpected character");
