@@ -251,6 +251,10 @@ static void unary(void)
 static int level_of(Tok t)
 {
     switch (t) {
+    case T_EQ: case T_NE:
+        return 3;
+    case T_LT: case T_LE: case T_GT: case T_GE:
+        return 4;
     case T_PLUS: case T_MINUS:
         return 9;
     case T_STAR: case T_SLASH: case T_PERCENT:
@@ -261,6 +265,14 @@ static int level_of(Tok t)
 }
 
 /* rax = rax OP rcx */
+/* rax = (rax CC rcx) as 0 or 1; cc is the second byte of the setcc opcode */
+static void compare(int cc)
+{
+    emit_hex("48 39 C8 0F");                /* cmp rax, rcx ; setcc al */
+    emit8(cc);
+    emit_hex("C0 48 0F B6 C0");             /* movzx rax, al */
+}
+
 static void apply_binop(Tok op)
 {
     switch (op) {
@@ -269,6 +281,12 @@ static void apply_binop(Tok op)
     case T_STAR:    emit_hex("48 0F AF C1"); break;
     case T_SLASH:   emit_hex("48 99 48 F7 F9"); break;
     case T_PERCENT: emit_hex("48 99 48 F7 F9 48 89 D0"); break;
+    case T_EQ:      compare(0x94); break;
+    case T_NE:      compare(0x95); break;
+    case T_LT:      compare(0x9C); break;
+    case T_LE:      compare(0x9E); break;
+    case T_GT:      compare(0x9F); break;
+    case T_GE:      compare(0x9D); break;
     default: break;
     }
 }
