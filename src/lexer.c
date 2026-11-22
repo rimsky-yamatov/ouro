@@ -196,6 +196,32 @@ static void scan_punct(void)
     case '/': tok = T_SLASH;   break;
     case '%': tok = T_PERCENT; break;
     case '^': tok = T_CARET;   break;
+    case '<':
+        if (peekc(0) == '<') { pos++; tok = T_SHL; }
+        else if (peekc(0) == '=') { pos++; tok = T_LE; }
+        else tok = T_LT;
+        break;
+    case '>':
+        if (peekc(0) == '>') { pos++; tok = T_SHR; }
+        else if (peekc(0) == '=') { pos++; tok = T_GE; }
+        else tok = T_GT;
+        break;
+    case '=':
+        if (peekc(0) == '=') { pos++; tok = T_EQ; }
+        else tok = T_ASSIGN;
+        break;
+    case '!':
+        if (peekc(0) == '=') { pos++; tok = T_NE; }
+        else tok = T_BANG;
+        break;
+    case '&':
+        if (peekc(0) == '&') { pos++; tok = T_ANDAND; }
+        else tok = T_AMP;
+        break;
+    case '|':
+        if (peekc(0) == '|') { pos++; tok = T_OROR; }
+        else tok = T_PIPE;
+        break;
     case '~': tok = T_TILDE;   break;
     case '(': tok = T_LPAREN;  break;
     case ')': tok = T_RPAREN;  break;
