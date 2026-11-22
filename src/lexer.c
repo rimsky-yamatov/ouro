@@ -160,6 +160,30 @@ static void scan_char(void)
     tok_int = v;
 }
 
+static void scan_string(void)
+{
+    int n = 0;
+
+    pos++;                                  /* opening quote */
+    for (;;) {
+        int c = peekc(0);
+
+        if (c == -1 || c == '\n')
+            die(line, "unterminated string literal");
+        pos++;
+        if (c == '"')
+            break;
+        if (c == '\\')
+            c = read_escape();
+        if (n >= MAX_STRDATA - 1)
+            die(line, "string literal too long");
+        tok_str[n++] = (char)c;
+    }
+    tok_str[n] = '\0';
+    tok_str_len = n;
+    tok = T_STR;
+}
+
 static void skip_space(void)
 {
     for (;;) {
@@ -203,6 +227,10 @@ void lex_next(void)
     }
     if (c == '\'') {
         scan_char();
+        return;
+    }
+    if (c == '"') {
+        scan_string();
         return;
     }
     die(line, "unexpected character");
