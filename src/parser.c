@@ -374,3 +374,39 @@ static void expr(void)
 {
     logical_or();
 }
+
+/* A new name must not clash with a builtin, global or function. */
+static void check_name_free(const char *name, int line)
+{
+    if (builtin_find(name) >= 0)
+        die(line, "'%s' is a builtin and cannot be redefined", name);
+    if (global_find(name) >= 0)
+        die(line, "'%s' is already declared as a global", name);
+    if (func_find(name) >= 0)
+        die(line, "'%s' is already used as a function name", name);
+}
+
+static void check_local_name(const char *name, int line)
+{
+    int disp;
+
+    if (local_find(name, &disp))
+        die(line, "redeclaration of '%s'", name);
+    check_name_free(name, line);
+}
+
+/* var NAME; */
+static void local_decl(void)
+{
+    char name[MAX_IDENT + 1];
+    int line;
+
+    lex_next();                             /* 'var' */
+    line = tok_line;
+    expect_ident(name);
+    if (tok == T_LBRACK)
+        die(tok_line, "local arrays are not supported; declare arrays at global scope");
+    expect(T_SEMI);
+    check_local_name(name, line);
+    local_add(name, line);
+}
