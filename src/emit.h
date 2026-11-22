@@ -26,3 +26,8 @@ void patch_here(int pos);
 /* String literal data and zero-initialized global storage. */
 int data_add(const char *s, int len);       /* returns the offset */
 int bss_alloc(int64_t n);                   /* returns the offset */
+
+/* 32-bit placeholders holding a data/bss offset, relocated at link time. */
+void emit_data_addr32(int off);
+void emit_bss_addr32(int off);
+void emit_call(int func);                   /* call rel32 to function index */

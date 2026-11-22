@@ -160,3 +160,31 @@ int bss_alloc(int64_t n)
     bss_len += n;
     return off;
 }
+
+static IntVec data_fix;     /* positions of data address placeholders */
+static IntVec bss_fix;      /* positions of bss address placeholders  */
+static IntVec call_pos;     /* positions of call rel32 fields         */
+static IntVec call_func;    /* function index for each call           */
+
+void emit_data_addr32(int off)
+{
+    vec_push(&data_fix, code_len);
+    emit32((uint32_t)off);
+}
+
+void emit_bss_addr32(int off)
+{
+    vec_push(&bss_fix, code_len);
+    emit32((uint32_t)off);
+}
+
+void emit_call(int func)
+{
+    int p;
+
+    emit8(0xE8);
+    p = emit_pos();
+    vec_push(&call_pos, p);
+    vec_push(&call_func, func);
+    emit32(0);
+}
