@@ -321,3 +321,27 @@ static void binary(int minlvl)
         apply_binop(op);
     }
 }
+
+static void logical_and(void)
+{
+    binary(3);
+    if (tok == T_ANDAND) {
+        int js[CHAIN_MAX], n = 0, je, i;
+
+        while (tok == T_ANDAND) {
+            lex_next();
+            if (n >= CHAIN_MAX - 1)
+                die(tok_line, "too many operands in '&&' chain");
+            js[n++] = emit_test_jz();       /* false: skip the rest */
+            binary(3);
+        }
+        js[n++] = emit_test_jz();
+        emit8(0xB8);                        /* mov eax, 1 */
+        emit32(1);
+        je = emit_jmp();
+        for (i = 0; i < n; i++)
+            patch_here(js[i]);
+        emit_hex("31 C0");                  /* xor eax, eax */
+        patch_here(je);
+    }
+}
