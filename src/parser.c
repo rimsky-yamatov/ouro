@@ -410,3 +410,29 @@ static void local_decl(void)
     check_local_name(name, line);
     local_add(name, line);
 }
+
+/* NAME = expr; */
+static void assign_stmt(void)
+{
+    char name[MAX_IDENT + 1];
+    int line = tok_line;
+
+    strcpy(name, tok_name);
+    lex_next();                             /* identifier */
+    expect(T_ASSIGN);
+    expr();
+    expect(T_SEMI);
+    store_var(name, line);
+}
+
+/* return [expr]; leaves through the epilogue (leave ; ret) */
+static void return_stmt(void)
+{
+    lex_next();                             /* 'return' */
+    if (tok == T_SEMI)
+        emit_hex("31 C0");                  /* xor eax, eax */
+    else
+        expr();
+    expect(T_SEMI);
+    emit_hex("C9 C3");
+}
