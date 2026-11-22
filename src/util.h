@@ -14,3 +14,13 @@
 
 /* Print "line N: message" to stderr and exit with status 1. */
 OURO_NORETURN OURO_PRINTF(2, 3) void die(int line, const char *fmt, ...);
+
+/* Growable vector of ints. A zeroed IntVec is empty and ready to use. */
+typedef struct {
+    int *v;
+    int n;
+    int cap;
+} IntVec;
+
+void vec_push(IntVec *s, int x);
+int vec_pop(IntVec *s);
