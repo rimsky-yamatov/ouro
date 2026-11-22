@@ -132,3 +132,31 @@ void emit_jmp_to(int target)
 
     patch_to(p, target);
 }
+
+static uint8_t data[MAX_STRDATA];
+static int data_len;
+static int64_t bss_len;
+
+int data_add(const char *s, int len)
+{
+    int off = data_len;
+
+    if (data_len + len + 1 > MAX_STRDATA)
+        die(tok_line, "too many string literals (max %d bytes of string data)",
+            MAX_STRDATA);
+    memcpy(data + data_len, s, (size_t)len);
+    data[data_len + len] = 0;
+    data_len += len + 1;
+    return off;
+}
+
+int bss_alloc(int64_t n)
+{
+    int off = (int)bss_len;
+
+    n = (n + 7) & ~(int64_t)7;
+    if (bss_len + n > MAX_BSS)
+        die(tok_line, "too much global data (max %d bytes)", MAX_BSS);
+    bss_len += n;
+    return off;
+}

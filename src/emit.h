@@ -22,3 +22,7 @@ void emit_jmp_to(int target);
 void emit_patch32(int pos, uint32_t v);
 void patch_to(int pos, int target);
 void patch_here(int pos);
+
+/* String literal data and zero-initialized global storage. */
+int data_add(const char *s, int len);       /* returns the offset */
+int bss_alloc(int64_t n);                   /* returns the offset */
